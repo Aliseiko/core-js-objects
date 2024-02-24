@@ -275,7 +275,7 @@ function fromJSON(proto, json) {
  *    ]
  */
 function sortCitiesArray(arr) {
-  return arr.sort(function (a, b) {
+  return arr.sort(function foo(a, b) {
     if (a.country < b.country) {
       return -1;
     }
