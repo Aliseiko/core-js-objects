@@ -18,7 +18,6 @@
  *    shallowCopy({}) => {}
  */
 function shallowCopy(obj) {
-  // Use the spread operator to create a shallow copy of the object
   return { ...obj };
 }
 
@@ -127,27 +126,18 @@ function makeImmutable(obj) {
  *    makeWord({ H:[0], e: [1], l: [2, 3, 8], o: [4, 6], W:[5], r:[7], d:[9]}) => 'HelloWorld'
  */
 function makeWord(lettersObject) {
-  // Initialize an array to store the characters in correct positions
   const wordArray = [];
-
-  // Get the unique letters from the keys of the object
   const letters = Object.keys(lettersObject);
 
-  // Iterate over the letters
   letters.forEach((letter) => {
-    // Get the positions array for the current letter
     const positions = lettersObject[letter];
 
-    // Iterate over the positions and insert the letter at the correct position in the array
     positions.forEach((position) => {
       wordArray[position] = letter;
     });
   });
 
-  // Join the array to construct the final word
-  const word = wordArray.join('');
-
-  return word;
+  return wordArray.join('');
 }
 
 /**
@@ -391,32 +381,91 @@ function group(array, keySelector, valueSelector) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  result: '',
+  calls: [],
+
+  element(value) {
+    const cssObj = Object.create(cssSelectorBuilder);
+    cssObj.result = this.result + value;
+    cssObj.ID = 1;
+    this.checkUniq(cssObj.ID);
+    cssObj.calls = [...this.calls, cssObj.ID];
+    this.checkOrder(cssObj.ID);
+    return cssObj;
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    const cssObj = Object.create(cssSelectorBuilder);
+    cssObj.result = `${this.result}#${value}`;
+    cssObj.ID = 2;
+    this.checkUniq(cssObj.ID);
+    cssObj.calls = [...this.calls, cssObj.ID];
+    this.checkOrder(cssObj.ID);
+    return cssObj;
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    const cssObj = Object.create(cssSelectorBuilder);
+    cssObj.result = `${this.result}.${value}`;
+    cssObj.ID = 3;
+    cssObj.calls = [...this.calls, cssObj.ID];
+    this.checkOrder(cssObj.ID);
+    return cssObj;
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    const cssObj = Object.create(cssSelectorBuilder);
+    cssObj.result = `${this.result}[${value}]`;
+    cssObj.ID = 4;
+    cssObj.calls = [...this.calls, cssObj.ID];
+    this.checkOrder(cssObj.ID);
+    return cssObj;
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    const cssObj = Object.create(cssSelectorBuilder);
+    cssObj.result = `${this.result}:${value}`;
+    cssObj.ID = 5;
+    cssObj.calls = [...this.calls, cssObj.ID];
+    this.checkOrder(cssObj.ID);
+    return cssObj;
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  pseudoElement(value) {
+    const cssObj = Object.create(cssSelectorBuilder);
+    cssObj.result = `${this.result}::${value}`;
+    cssObj.ID = 6;
+    this.checkUniq(cssObj.ID);
+    cssObj.calls = [...this.calls, cssObj.ID];
+    this.checkOrder(cssObj.ID);
+    return cssObj;
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  combine(selector1, combinator, selector2) {
+    const cssObj = Object.create(cssSelectorBuilder);
+    const sel1 = selector1.result;
+    const sel2 = selector2.result;
+    cssObj.result = `${this.result}${sel1} ${combinator} ${sel2}`;
+    cssObj.calls = [...this.calls, sel1.calls, sel2.calls];
+    return cssObj;
+  },
+
+  stringify() {
+    return this.result;
+  },
+
+  checkUniq(ID) {
+    if (this.calls.includes(ID))
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+  },
+
+  checkOrder(x) {
+    if (this.ID > x)
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
   },
 };
 
